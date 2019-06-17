@@ -1,0 +1,31 @@
+- name: "Download Jolokia onto the Tower host"
+  get_url:
+    url: "{{ amqstreams_downloadURL }}/{{ jolokia_install_file }}"
+    dest: '{{ amqstreams_temp_download_path }}'
+    url_username: "{{ url_username | default(omit) }}"
+    url_password: "{{ url_password | default(omit) }}"
+  async: 7200
+  poll: 0
+  register: url_jolokia_download
+  run_once: True
+  delegate_to: localhost
+  become: False
+
+- name: Check On Amqstreams Download Completion (URL)
+  async_status: jid={{ url_jolokia_download.ansible_job_id }}
+  register: job_result1
+  until: job_result1.finished
+  retries: 600
+  delay: 10
+  run_once: True
+  delegate_to: localhost
+  become: False
+
+- name: Copy Jolokia agent to the 
+  copy:
+    src: "{{ amqstreams_temp_download_path }}/{{ jolokia_install_file }}"
+    dest: "{{ amqstreams_install_path }}/kafka/bin"
+    owner: "{{ amqstreams_user }}"
+    group: "{{ amqstreams_group }}"
+    mode: 0644
+  register: jolokia_installed

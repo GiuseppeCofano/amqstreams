@@ -1,0 +1,11 @@
+tickTime=2000
+dataDir={{ zookeeper_data_path }}
+clientPort={{ zookeeper_port }}
+initLimit=10
+syncLimit=5
+maxClientCnxns=60
+autopurge.snapRetainCount=3
+autopurge.purgeInterval=24
+{% for host in groups['zookeeper'] %}
+server.{{ hostvars[host].myid }}={{ hostvars[host].ansible_hostname }}:2888:3888
+{% endfor %}

@@ -1,0 +1,4 @@
+JAVA_HOME={{ amqstreams_java_home }}
+LOG_DIR={{ zookeeper_logs_dir }}
+{% if jolokia_enable == True %}KAFKA_OPTS=-javaagent:{{ amqstreams_install_path }}/kafka/bin/{{ jolokia_install_file }}=port=8778,host={{ ansible_hostname }}{% endif %}
+KAFKA_HEAP_OPTS=-Xmx{{ amqstreams_max_heap }} -Xms{{ amqstreams_min_heap }}

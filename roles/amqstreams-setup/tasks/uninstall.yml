@@ -1,0 +1,11 @@
+---
+- name: Remove previous installation
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+  - "{{ amqstreams_install_path }}"
+  - "{{ zookeeper_logs_dir }}"
+  - "{{ zookeeper_data_path }}"
+  - "{{ kafka_logs_dir }}"
+  - "{{ kafka_data_path }}"

@@ -1,0 +1,82 @@
+---
+##Configure kafka properties
+- name: Set Kafka broker Id for each host of the current group 
+  set_fact: 
+    broker_id: "{% for thishost in play_hosts %}{% if inventory_hostname==thishost %}{{ loop.index }}{% endif %}{% endfor %}"
+  with_sequence: count="{{ groups['kafka'] | length }}"
+
+- name: Create config dir for Kafka
+  file:
+    path: "{{ amqstreams_install_path }}/{{ amqstreams_install_dir }}/config"
+    state: directory
+    owner: "{{ amqstreams_user }}"
+    group: "{{ amqstreams_group }}"
+    mode: 0775
+    recurse: yes
+
+- name: Add Kafka config file
+  template:
+    src: server.properties.j2
+    dest: "{{ amqstreams_install_path }}/{{ amqstreams_install_dir }}/config/server.properties"
+    owner: "{{ amqstreams_user }}"
+    group: "{{ amqstreams_group }}"
+    mode: 0400
+
+- name: Create data dir for Kafka
+  file:
+    path: "{{ kafka_data_path }}"
+    state: directory
+    owner: "{{ amqstreams_user }}"
+    group: "{{ amqstreams_group }}"
+    mode: 0775
+    recurse: yes
+
+- name: Create log dir for Kafka
+  file:
+    path: "{{ kafka_logs_dir }}"
+    state: directory
+    owner: "{{ amqstreams_user }}"
+    group: "{{ amqstreams_group }}"
+    mode: 0775
+    recurse: yes
+
+#Add systemd configuration on RHEL 7 systems
+- name: Add systemd to RHEL 7 systems
+  block: 
+
+    - name: Add Systemd service file 
+      template:
+        src: kafka.service.j2
+        dest: "/usr/lib/systemd/system/kafka.service"
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Add Amqstreams config file
+      template:
+        src: kafka.j2
+        dest: "/etc/sysconfig/kafka"
+        mode: 0644
+
+    #reload systemd
+    - name: Perform systemctl daemon-reload
+      systemd:
+        daemon_reload: yes
+      changed_when: false
+
+    - name: Try starting daemon
+      systemd: 
+        name: "kafka"
+        state: restarted
+        enabled: yes
+
+    #status service test
+    - name: "Print status test"
+      command: "systemctl status kafka"
+      register: status_test
+      ignore_errors: true  
+
+    - debug: 
+        msg: "{{ status_test.stdout_lines }}"
+
+  when: ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_major_version'] == "7"

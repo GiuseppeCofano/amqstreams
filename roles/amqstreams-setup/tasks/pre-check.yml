@@ -1,0 +1,61 @@
+#pre-check
+---
+- name: "Verify Java Home directory {{ amqstreams_java_home }} is present"
+  stat:
+    path: "{{ amqstreams_java_home }}"
+  register: java_reg
+  failed_when: java_reg.stat.exists == False
+
+- name: "Verify Java Version is equal to {{ amqstreams_java_version }}"
+  shell: "{{ amqstreams_java_home }}/bin/java -version"
+  register: java_vers_reg
+  failed_when: ((java_vers_reg.stderr_lines | first | trim).split(' ')[2] is version(amqstreams_java_version, '<') )
+
+- name: "Verify if Amqstreams is already installed at {{ amqstreams_install_path }}"
+  stat:
+    path: "{{ amqstreams_install_path }}"
+  register: reg_amqstreams_version
+
+#Check Kafka port
+#NOTICE: by default the service will be listening on the discovered hostname, which should correspond to the service IP, not to the mgmt IP
+- name: Check if port is already in use (Kafka)
+  wait_for:
+    host: "{{ ansible_hostname }}"
+    port: "{{ kafka_port }}"
+    state: stopped        # Port should be open
+    delay: 0               # No wait before first check (sec)
+    timeout: 3             # Stop checking after timeout (sec)
+  register: kafka_port_check
+  ignore_errors: yes
+  when: mode == "only_kafka" or mode == "integrate"
+
+- name: Fail if Kafka port already in use
+  fail:
+    msg: "Failing, port already in use..."
+  when: kafka_port_check.failed is defined and kafka_port_check.failed 
+
+#Check Zookeeper port
+- name: Check if port is already in use (Zookeeper)
+  wait_for:
+    host: "{{ ansible_hostname }}"
+    port: "{{ zookeeper_port }}"
+    state: stopped        # Port should be open
+    delay: 0               # No wait before first check (sec)
+    timeout: 3             # Stop checking after timeout (sec)
+  register: zookeeper_port_check
+  ignore_errors: yes
+  when: mode == "only_zookeeper" or mode == "integrate"
+
+- name: Fail if Zookeeper port already in use
+  fail:
+    msg: "Failing, port already in use..."
+  when: zookeeper_port_check.failed is defined and zookeeper_port_check.failed 
+
+- block:
+    - debug: 
+        msg: "WARNING: Amqstreams already installed, it will be reinstalled only if amqstreams_force_reinstall is set to True (Default: False)"
+
+    - set_fact:
+        amqstreams_already_installed: True
+  when: reg_amqstreams_version.stat.exists == True
+

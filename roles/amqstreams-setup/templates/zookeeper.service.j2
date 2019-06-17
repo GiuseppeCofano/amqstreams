@@ -1,0 +1,16 @@
+[Unit]
+Description=zookeeper
+After=syslog.target network.target
+
+
+[Service]
+Type=simple
+User={{ amqstreams_user }}
+Group={{ amqstreams_group }}
+EnvironmentFile=/etc/sysconfig/zookeeper
+ExecStart={{ amqstreams_install_path }}/{{ amqstreams_install_dir }}/bin/zookeeper-server-start.sh {{ amqstreams_install_path }}/{{ amqstreams_install_dir }}/config/zookeeper.properties
+ExecStop={{ amqstreams_install_path }}/{{ amqstreams_install_dir }}/bin/zookeeper-server-stop.sh
+
+
+[Install]
+WantedBy=multi-user.target

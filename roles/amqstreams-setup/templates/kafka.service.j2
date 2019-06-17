@@ -1,0 +1,19 @@
+[Unit]
+Description=Apache Kafka
+{% if mode == "integrate" %}
+Requires=zookeeper.service
+After=zookeeper.service
+{% endif %}
+
+
+[Service]
+Type=simple
+User={{ amqstreams_user }}
+Group={{ amqstreams_group }}
+EnvironmentFile=/etc/sysconfig/kafka
+ExecStart={{ amqstreams_install_path }}/{{ amqstreams_install_dir }}/bin/kafka-server-start.sh {{ amqstreams_install_path }}/{{ amqstreams_install_dir }}/config/server.properties
+ExecStop={{ amqstreams_install_path }}/{{ amqstreams_install_dir }}/bin/kafka-server-stop.sh
+
+
+[Install]
+WantedBy=multi-user.target

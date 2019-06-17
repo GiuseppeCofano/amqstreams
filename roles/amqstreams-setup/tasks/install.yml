@@ -1,0 +1,96 @@
+---
+## Setup Amqstreams user and group
+- name: Create group {{ amqstreams_group }}
+  group:
+    name: "{{ amqstreams_group }}"
+    gid: "{{ amqstreams_gid | default(omit) }}"
+    state: present
+
+- name: Create user {{ amqstreams_user }}
+  user:
+    name: "{{ amqstreams_user }}"
+    group: "{{ amqstreams_group }}"
+    uid: "{{ amqstreams_uid | default(omit) }}"
+    state: present
+
+- name: Setup Separate Disk if needed
+  include: disk-setup.yml
+  when: enable_disk_setup 
+
+- name: Create existence of Amqstreams install path (useful is disk setup not enabled)
+  file:
+    path: '{{ amqstreams_install_path }}'
+    state: directory
+
+## DOWNLOAD AND INSTALL KAFKA FROM .ZIP
+- name: Create temp directory on Ansible controller
+  file:
+    path: '{{ amqstreams_temp_download_path }}'
+    state: directory
+  changed_when: False  
+  delegate_to: localhost
+  become: False
+
+- name: "Download Amqstreams {{ amqstreams_install_file }} onto the Tower host"
+  get_url:
+    url: "{{ amqstreams_downloadURL }}/{{ amqstreams_install_file }}"
+    dest: '{{ amqstreams_temp_download_path }}'
+    url_username: "{{ url_username | default(omit) }}"
+    url_password: "{{ url_password | default(omit) }}"
+  async: 7200
+  poll: 0
+  register: url_amqstreams_download
+  run_once: True
+  delegate_to: localhost
+  become: False
+
+- name: Check On Amqstreams Download Completion (URL)
+  async_status: jid={{ url_amqstreams_download.ansible_job_id }}
+  register: job_result1
+  until: job_result1.finished
+  retries: 600
+  delay: 10
+  run_once: True
+  delegate_to: localhost
+  become: False
+
+- name: Unarchive {{ amqstreams_install_file }} at {{ amqstreams_temp_download_path}} on the Tower host
+  unarchive:
+    src: "{{ amqstreams_temp_download_path }}/{{ amqstreams_install_file }}"
+    dest: "{{ amqstreams_install_path }}"
+  register: amqstreams_installed
+
+- name: Look for all files in directory for later replacement
+  find:
+    paths: "{{ amqstreams_install_path }}"
+    patterns: "*redhat*"
+    file_type: directory
+  register: find_result
+
+- name: Set install dir
+  command: "mv {{ item.path }} {{ amqstreams_install_path }}/{{ amqstreams_install_dir }}"
+  with_items: "{{ find_result.files }}"
+
+- name: Set right ownership in the amqstreams dest dir
+  file:
+    path: "{{ amqstreams_install_path }}"
+    state: directory
+    owner: "{{ amqstreams_user }}"
+    group: "{{ amqstreams_group }}"
+    mode: 0777
+    recurse: yes
+
+- name: Tune nofile for Kafka
+  lineinfile:
+    path: /etc/security/limits.conf
+    line: '{{ amqstreams_user}}        -       nofile       {{ amqstreams_nofile }}' 
+
+- name: Install Jolokia agent
+  include: jolokia-setup.yml
+  when: jolokia_enable
+
+
+
+
+
+

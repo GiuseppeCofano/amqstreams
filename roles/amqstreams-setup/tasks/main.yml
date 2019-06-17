@@ -1,0 +1,43 @@
+---
+# tasks file for amqstreams-role
+
+#Run pre-check before executing any action
+- name: "Run pre-check before installing"
+  include: "pre-check.yml"
+
+
+#Kafka install block
+- block:
+    - name: "Unnstall previous Amqstreams"
+      include: "uninstall.yml"
+    - name: "Install Amqstreams if no previous installation or if reinstallation is forced"
+      include: "install.yml"
+    - name: "Configure Kafka"
+      include: "configure-kafka.yml"
+  when: mode == "only_kafka" and (not amqstreams_already_installed or amqstreams_force_reinstall)
+
+
+#Zookeeper install block
+- block:
+    - name: "Unnstall previous Amqstreams"
+      include: "uninstall.yml"
+    - name: "Install Amqstreams if no previous installation or if reinstallation is forced"
+      include: "install.yml"
+    - name: "Configure Zookeeper"
+      include: "configure-zookeeper.yml"
+  when: mode == "only_zookeeper" and (not amqstreams_already_installed or amqstreams_force_reinstall)
+
+
+#Kafka and Zookeeper install block
+- block:
+    - name: "Unnstall previous Amqstreams"
+      include: "uninstall.yml"
+    - name: "Install Amqstreams if no previous installation or if reinstallation is forced"
+      include: "install.yml"
+    - name: "Configure Zookeeper"
+      include: "configure-zookeeper.yml"
+    - name: "Configure Kafka"
+      include: "configure-kafka.yml"
+  when: mode == "integrate" and (not amqstreams_already_installed or amqstreams_force_reinstall)
+
+

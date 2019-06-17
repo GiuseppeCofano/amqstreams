@@ -1,0 +1,26 @@
+## SETUP KAFKA DISK 
+- name: Create a volume group on {{ amqstreams_disk }}
+  lvg:
+    pvs: "{{ amqstreams_disk }}"
+    state: present
+    vg: "amqstreams_vg"
+
+- name: Create a logical volume
+  lvol:
+    lv: "amqstreams_lv"
+    vg: "amqstreams_vg"
+    size: "100%VG"
+
+- name: Create a filesystem
+  filesystem:
+    dev: "/dev/amqstreams_vg/amqstreams_lv"
+    fstype: "xfs"
+    opts: "-L kafka"
+
+- name: Mount the filesystem at boot
+  mount:
+    fstype: "xfs"
+    #src: "/dev/amqstreams_vg/amqstreams_lv"
+    src: LABEL=kafka
+    path: "{{ amqstreams_install_path }}"
+    state: "mounted"

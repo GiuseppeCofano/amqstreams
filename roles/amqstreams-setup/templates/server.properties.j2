@@ -1,0 +1,61 @@
+broker.id={{ broker_id }}
+{% if replication_network_enable %}
+listener.security.protocol.map={% if amqstreams_enable_tls %}USERS:SASL_SSL,REPLICATION:SSL{% else %}USERS:PLAINTEXT,REPLICATION:PLAINTEXT{% endif %}  
+listeners=USERS://:{{ kafka_port }},REPLICATION://:{{ kafka_replication_port }}
+advertised.listeners=USERS://{{ ansible_hostname }}:{{ kafka_port }},REPLICATION://{{ kafka_replication_ip }}:{{ kafka_replication_port }}
+inter.broker.listener.name=REPLICATION
+{% else %}
+listener.security.protocol.map={% if amqstreams_enable_tls %}SSL:SSL{% else %}PLAINTEXT:PLAINTEXT{% endif %}   
+listeners={% if amqstreams_enable_tls %}SSL{% else %}PLAINTEXT{% endif %}://{{ ansible_hostname }}:{{ kafka_port }}
+advertised.listeners={% if amqstreams_enable_tls %}SSL{% else %}PLAINTEXT{% endif %}://{{ ansible_hostname }}:{{ kafka_port }}
+inter.broker.listener.name={% if amqstreams_enable_tls %}SSL{% else %}PLAINTEXT{% endif %}
+{% endif %}
+
+
+
+log.dirs={{ kafka_data_path }}/kafka-logs
+log.retention.hours=168
+log.retention.bytes=1073741824
+log.segment.bytes=1073741824
+log.retention.check.interval.ms=300000
+
+#Create variable to partition number (CONFIGURE)
+num.partitions=5
+
+zookeeper.connect={% for host in groups['zookeeper'] %}{{ hostvars[host].ansible_hostname }}:{{ zookeeper_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+zookeeper.connection.timeout.ms=6000
+
+offsets.topic.replication.factor=3
+transaction.state.log.replication.factor=3
+transaction.state.log.min.isr=3
+default.replication.factor=3
+auto.create.topics.enable=false
+delete.topic.enable=false
+
+num.network.threads=3
+num.io.threads=8
+socket.send.buffer.bytes=102400
+socket.receive.buffer.bytes=102400
+socket.request.max.bytes=104857600
+num.recovery.threads.per.data.dir=1
+
+group.initial.rebalance.delay.ms=3000
+group.max.session.timeout.ms=300000
+group.min.session.timeout.ms=6000
+num.replica.fetchers=3
+replica.lag.time.max.ms=20000
+queued.max.requests=500
+unclean.leader.election.enable=false
+min.insync.replicas=2
+
+{% if amqstreams_enable_tls %}
+ssl.endpoint.identification.algorithm=HTTPS
+ssl.keystore.location=/data/ssl/kafka-server.ks
+ssl.keystore.password=PASSWORD
+ssl.key.password=PASSWORD
+ssl.truststore.location=/data/ssl/kafka-server.ts
+ssl.truststore.password=PASSWORD
+{% endif %}
+
+

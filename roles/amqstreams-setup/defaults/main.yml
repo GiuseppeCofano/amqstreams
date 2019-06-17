@@ -1,0 +1,55 @@
+---
+# defaults file 
+
+# User and Group for Amqstreams installation
+amqstreams_user: kafka
+amqstreams_group: kafka
+# Port used by the Kafka service
+kafka_port: 9092
+# Port used by the Zookeeper service
+zookeeper_port: 2181
+#nofile for Kafka
+amqstreams_nofile: 2048
+amqstreams_max_heap: 1G 
+amqstreams_min_heap: 1G
+# Disk to use for Kafka
+amqstreams_disk: /dev/sdb
+#Set of installation paths (change them according to your procedure, if enabled the disk above can be used)
+zookeeper_data_path: /data/kafka/amqs_zookeeper
+zookeeper_logs_dir: /data/kafka/logs_zookeeper
+kafka_data_path: /data/kafka/amqs_kafka
+kafka_logs_dir: /data/kafka/logs_kafka
+# Temporary path where to store Amqstreams .zip (enables installation on hosts not having direct network visibility to the "amqstreams_downloadURL", provided that the Ansible host has it)
+amqstreams_temp_download_path: /tmp
+# URL from where the Amqstreams .zip file can be downloaded
+amqstreams_downloadURL: https://access.redhat.com/jbossnetwork/restricted/softwareDownload.html?softwareId=66601
+# .zip file to install Amqstreams
+amqstreams_install_file: amq-streams-1.1.0-bin.zip
+# Target installation dir, not configurable
+amqstreams_install_dir: kafka
+# Target installation path
+amqstreams_install_path: /data/kafka
+# Flag to enable/disable TLS 
+amqstreams_enable_tls: False
+# Flag to enable disk setup, default is yes
+enable_disk_setup: True
+# Java version to use (must be already present on the system)
+amqstreams_java_version: 1.8
+# Java Home path
+amqstreams_java_home: /opt/java
+# Flag to force Amqstreams installation if already present on the system at the target install path "amqstreams_install_path"
+amqstreams_force_reinstall: False
+# Decide what mode to install <only_kafka|only_zookeeper|integrate>, i.e. only kafka, only zoo
+mode: integrate
+# Set True if you want to install Jolokia (which has to be made available on a URL)
+jolokia_enable: False
+# Jolokia agent (change version if desired)
+jolokia_install_file: jolokia-jvm-1.6.0-agent.jar
+
+replication_network_enable: False
+kafka_replication_ip: "{{ ansible_hostname }}"
+kafka_replication_port: 9093
+
+# Variable to register if Amqstreams already present (NOTICE: this variable is not configurable)
+amqstreams_already_installed: False
+
