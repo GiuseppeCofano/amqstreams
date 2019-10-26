@@ -1,6 +1,6 @@
 ## About
 
-This Ansible role installs Amqstreams (Kafka) from .zip (or other archive format, like tar), which has to be made available on an URL (by default the Red Hat Network is used). 
+This Ansible role installs Amqstreams (Kafka) from .zip (or other archive format, like tar), which has to be made available on an URL (by default the Red Hat Network is used).
 
 Both Zookeeper and Kafka are installed, integrated or independently from each other.
 
@@ -14,7 +14,7 @@ Other configurations carried out by this role:
 
 ## Requirements
 
-This role requires a RHEL Linux distribution. It might work with other software versions, 
+This role requires a RHEL Linux distribution. It might work with other software versions,
 but is tested with the following specifics and versions:
 
 * Ansible: 2.5+
@@ -45,6 +45,7 @@ The following variables can be used in the `hosts` inventory file:
 | `amqstreams_enable_tls` | False | Enable intracluster TLS communication |
 | `enable_disks_setup` | True | Set to False if not using a dedicated disk (as best practice) |
 | `jolokia_enable` | False | Enable installation of the Jolokia agent |
+| `jolokia_install_file` | jolokia-jvm-1.6.0-agent.jar | Installation file for jolokia agent |
 | `replication_network_enable` | False | Enable separate replication network |
 | `amqstreams_install_path` | /data/kafka | Target installation path |
 | `amqstreams_install_file` | amq-streams-1.1.0-bin.zip | Installation file (change the default value if renaming the Red Hat file) |
@@ -92,9 +93,6 @@ To install Amqstreams in PROD (separate host groups for Kafka and Zookeeper):
     amqstreams_force_reinstall: True
 ```
 
-Notes: 
+Notes:
 
 None
-
-
-
