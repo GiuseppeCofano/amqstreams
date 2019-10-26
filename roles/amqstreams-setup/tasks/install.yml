@@ -77,7 +77,7 @@
     state: directory
     owner: "{{ amqstreams_user }}"
     group: "{{ amqstreams_group }}"
-    mode: 0777
+    mode: 0775
     recurse: yes
 
 - name: Tune nofile for Kafka
